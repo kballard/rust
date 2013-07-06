@@ -62,6 +62,10 @@ static TAG_FOUR_B: uint = 240u;
     Cn  Unassigned              a reserved unassigned code point or a noncharacter
 */
 
+/// The unicode replacement chaacter
+#[allow(non_uppercase_statics)]
+pub static ReplacementChar : char = 0xFFFD as char;
+
 /// Returns whether the specified character is considered a unicode alphabetic
 /// character
 pub fn is_alphabetic(c: char) -> bool   { derived_property::Alphabetic(c) }
