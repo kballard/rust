@@ -121,6 +121,8 @@ pub mod str;
 
 #[path = "str/ascii.rs"]
 pub mod ascii;
+#[path = "encoding/mod.rs"]
+pub mod encoding;
 
 pub mod ptr;
 pub mod owned;
