@@ -17,6 +17,7 @@ use char::ReplacementChar;
 use iterator::Iterator;
 use option::{Option, None, Some};
 use to_bytes::IterBytes;
+use uint;
 use vec::{CopyableVector, ImmutableVector, MutableVector, MutableCloneableVector};
 
 #[allow(non_camel_case_types)]
@@ -111,6 +112,21 @@ impl<T: Iterator<char>> Iterator<u8> for UTF16Encoder<T> {
         let r = Some(self.buf[self.lo]);
         self.lo += 1;
         r
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (uint, Option<uint>) {
+        // most common will be 2*length, but surrogate pairs mean it coul be up to 4*length
+        let (lo, hi) = self.iter.size_hint();
+
+        let lo = if lo > uint::max_value / 2 {
+            uint::max_value
+        } else { lo*2 };
+        let hi = do hi.chain |x| {
+            if x > uint::max_value / 4 { None }
+            else { Some(x*4) }
+        };
+        (lo, hi)
     }
 }
 
@@ -207,6 +223,18 @@ impl<T: Iterator<u8>> Iterator<char> for UTF16Decoder<T> {
 
             return Some(c as char);
         }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (uint, Option<uint>) {
+        // Could be as many as length/2, or as few as length/4 due to surrogate pairs
+        let (lo, hi) = self.iter.map_default((0, None), |it| it.size_hint());
+
+        let lo = if lo == uint::max_value { uint::max_value }
+                 else { lo / 4 };
+        // round hi up; a trailing byte could turn into a char based on condition handling
+        let hi = do hi.map_consume |x| { x / 2 + x % 2 };
+        (lo, hi)
     }
 }
 
