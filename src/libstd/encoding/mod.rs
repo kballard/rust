@@ -20,6 +20,8 @@
 use iterator::Iterator;
 
 pub use encoding::utf16::{utf16, utf16le, utf16be, UTF16Encoder, UTF16Decoder};
+use iterator::{MapIterator,IteratorUtil};
+use vec::{VecIterator,ImmutableVector};
 
 mod utf16;
 
@@ -80,4 +82,44 @@ pub trait Encoder<T: Iterator<char>, U: Iterator<u8>> {
 /// The Decoder trait allows for decoding bytes into chars
 pub trait Decoder<T: Iterator<u8>, U: Iterator<char>> {
     fn decode(&self, src: T) -> U;
+}
+
+type MapVecIter<'self, T> = MapIterator<'self, &'self T, T, VecIterator<'self, T>>;
+
+pub trait VecEncoder<T: Iterator<char>, U: Iterator<u8>, E: Encoder<T, U>> {
+    fn encode_as(self, enc: E) -> U;
+}
+
+impl<'self, U: Iterator<u8>, E: Encoder<MapVecIter<'self, char>, U>>
+VecEncoder<MapVecIter<'self, char>, U, E> for &'self [char] {
+    #[inline]
+    fn encode_as(self, enc: E) -> U {
+        enc.encode(self.iter().transform(|x|*x))
+    }
+}
+
+pub trait VecDecoder<T: Iterator<u8>, U: Iterator<char>, D: Decoder<T, U>> {
+    fn decode_as(self, enc: D) -> U;
+}
+
+impl<'self, U: Iterator<char>, D: Decoder<MapVecIter<'self, u8>, U>>
+VecDecoder<MapVecIter<'self, u8>, U, D> for &'self [u8] {
+    #[inline]
+    fn decode_as(self, enc: D) -> U {
+        enc.decode(self.iter().transform(|x|*x))
+    }
+}
+
+pub trait VecReencoder<T: Iterator<u8>, U: Iterator<char>, V: Iterator<u8>,
+                       D: Decoder<T, U>, E: Encoder<U, V>> {
+    fn reencode(self, from: D, to: E) -> V;
+}
+
+impl<'self, U: Iterator<char>, V: Iterator<u8>,
+            D: Decoder<MapVecIter<'self, u8>, U>, E: Encoder<U, V>>
+VecReencoder<MapVecIter<'self, u8>, U, V, D, E> for &'self [u8] {
+    #[inline]
+    fn reencode(self, from: D, to: E) -> V {
+        to.encode(from.decode(self.iter().transform(|x|*x)))
+    }
 }

@@ -246,77 +246,84 @@ mod tests {
     #[test]
     fn test_utf16be_encode() {
         let a = ['t', 'e', 's', 't'];
-        assert_eq!(utf16be.encode(a.iter().transform(|&x| x)).collect::<~[u8]>(),
+        assert_eq!(a.encode_as(utf16be).collect::<~[u8]>(),
                    ~[0, 't' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8]);
 
         let b = ['测', '试'];
-        assert_eq!(utf16be.encode(b.iter().transform(|&x| x)).collect::<~[u8]>(),
+        assert_eq!(b.encode_as(utf16be).collect::<~[u8]>(),
                    ~[0x6D, 0x4B, 0x8B, 0xD5]);
 
         let c = ['𡸳','拔'];
-        assert_eq!(utf16be.encode(c.iter().transform(|&x| x)).collect::<~[u8]>(),
+        assert_eq!(c.encode_as(utf16be).collect::<~[u8]>(),
                    ~[0xD8, 0x47, 0xDE, 0x33, 0xD8, 0x7E, 0xDC, 0xB6]);
     }
 
     #[test]
     fn test_utf16le_encode() {
         let a = ['t', 'e', 's', 't'];
-        assert_eq!(utf16le.encode(a.iter().transform(|&x| x)).collect::<~[u8]>(),
+        assert_eq!(a.encode_as(utf16le).collect::<~[u8]>(),
                    ~['t' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8, 0]);
     }
 
     #[test]
     fn test_utf16_encode_bom() {
         let a = ['t', 'e', 's', 't'];
-        assert_eq!(utf16.encode(a.iter().transform(|&x| x)).collect::<~[u8]>(),
+        assert_eq!(a.encode_as(utf16).collect::<~[u8]>(),
                    ~[0xFE, 0xFF, 0, 't' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8]);
     }
 
     #[test]
     fn test_utf16be_decode() {
         let a = [0, 't' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8];
-        assert_eq!(utf16be.decode(a.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(a.decode_as(utf16be).collect::<~[char]>(),
                    ~['t', 'e', 's', 't']);
 
         let b = [0x6Du8, 0x4Bu8, 0x8Bu8, 0xD5u8];
-        assert_eq!(utf16be.decode(b.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(b.decode_as(utf16be).collect::<~[char]>(),
                    ~['测', '试']);
 
         let c = [0xD8u8, 0x47u8, 0xDEu8, 0x33u8, 0xD8u8, 0x7Eu8, 0xDCu8, 0xB6u8];
-        assert_eq!(utf16be.decode(c.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(c.decode_as(utf16be).collect::<~[char]>(),
                    ~['𡸳','拔']);
     }
 
     #[test]
     fn test_utf16le_decode() {
         let a = ['t' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8, 0];
-        assert_eq!(utf16le.decode(a.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(a.decode_as(utf16le).collect::<~[char]>(),
                    ~['t', 'e', 's', 't']);
 
         let b = [0x47u8, 0xD8u8, 0x33u8, 0xDEu8, 0x7Eu8, 0xD8u8, 0xB6u8, 0xDCu8];
-        assert_eq!(utf16le.decode(b.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(b.decode_as(utf16le).collect::<~[char]>(),
                    ~['𡸳','拔']);
     }
 
     #[test]
     fn test_utf16_decode_bom() {
         let a = [0xFE, 0xFF, 0, 't' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8];
-        assert_eq!(utf16.decode(a.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(a.decode_as(utf16).collect::<~[char]>(),
                    ~['t', 'e', 's', 't']);
 
         let b = [0, 't' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8];
-        assert_eq!(utf16.decode(b.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(b.decode_as(utf16).collect::<~[char]>(),
                    ~['t', 'e', 's', 't']);
 
         let c = [0xFF, 0xFE, 't' as u8, 0, 'e' as u8, 0, 's' as u8, 0, 't' as u8, 0];
-        assert_eq!(utf16.decode(c.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(c.decode_as(utf16).collect::<~[char]>(),
                    ~['t', 'e', 's', 't']);
     }
 
     #[test]
     fn test_utf16_decode_ZWNBS() {
         let a = [0, 't' as u8, 0, 'e' as u8, 0xFE, 0xFF, 0, 's' as u8, 0, 't' as u8];
-        assert_eq!(utf16.decode(a.iter().transform(|&x| x)).collect::<~[char]>(),
+        assert_eq!(a.decode_as(utf16).collect::<~[char]>(),
                    ~['t', 'e', 0xFEFF as char, 's', 't']);
+    }
+
+    #[test]
+    fn test_utf16_reencode() {
+        let a = [0x47u8, 0xD8u8, 0x33u8, 0xDEu8, 0x7Eu8, 0xD8u8, 0xB6u8, 0xDCu8];
+        assert_eq!(a.reencode(utf16le,utf16be).collect::<~[u8]>(),
+                   ~[0xD8u8, 0x47u8, 0xDEu8, 0x33u8, 0xD8u8, 0x7Eu8, 0xDCu8, 0xB6u8]);
     }
 }
