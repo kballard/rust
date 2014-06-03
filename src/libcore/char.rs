@@ -77,10 +77,10 @@ static MAX_FOUR_B:  u32 = 0x200000u32;
     Cn  Unassigned              a reserved unassigned code point or a noncharacter
 */
 
-/// The highest valid code point
+/// The highest valid code point.
 pub static MAX: char = '\U0010ffff';
 
-/// Converts from `u32` to a `char`
+/// Converts from `u32` to a `char`.
 #[inline]
 pub fn from_u32(i: u32) -> Option<char> {
     // catch out-of-bounds and surrogates
@@ -91,59 +91,10 @@ pub fn from_u32(i: u32) -> Option<char> {
     }
 }
 
-/// Returns whether the specified `char` is considered a Unicode alphabetic
-/// code point
-pub fn is_alphabetic(c: char) -> bool   { derived_property::Alphabetic(c) }
-
-/// Returns whether the specified `char` satisfies the 'XID_Start' Unicode property
-///
-/// 'XID_Start' is a Unicode Derived Property specified in
-/// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
-/// mostly similar to ID_Start but modified for closure under NFKx.
-pub fn is_XID_start(c: char) -> bool    { derived_property::XID_Start(c) }
-
-/// Returns whether the specified `char` satisfies the 'XID_Continue' Unicode property
-///
-/// 'XID_Continue' is a Unicode Derived Property specified in
-/// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
-/// mostly similar to 'ID_Continue' but modified for closure under NFKx.
-pub fn is_XID_continue(c: char) -> bool { derived_property::XID_Continue(c) }
-
-///
-/// Indicates whether a `char` is in lower case
-///
-/// This is defined according to the terms of the Unicode Derived Core Property 'Lowercase'.
-///
-#[inline]
-pub fn is_lowercase(c: char) -> bool { derived_property::Lowercase(c) }
-
-///
-/// Indicates whether a `char` is in upper case
-///
-/// This is defined according to the terms of the Unicode Derived Core Property 'Uppercase'.
-///
-#[inline]
-pub fn is_uppercase(c: char) -> bool { derived_property::Uppercase(c) }
-
-///
-/// Indicates whether a `char` is whitespace
-///
-/// Whitespace is defined in terms of the Unicode Property 'White_Space'.
-///
-#[inline]
-pub fn is_whitespace(c: char) -> bool {
-    // As an optimization ASCII whitespace characters are checked separately
-    c == ' '
-        || ('\x09' <= c && c <= '\x0d')
-        || property::White_Space(c)
-}
-
-///
-/// Indicates whether a `char` is alphanumeric
+/// Returns whether the specified `char` is alphanumeric.
 ///
 /// Alphanumericness is defined in terms of the Unicode General Categories
 /// 'Nd', 'Nl', 'No' and the Derived Core Property 'Alphabetic'.
-///
 #[inline]
 pub fn is_alphanumeric(c: char) -> bool {
     derived_property::Alphabetic(c)
@@ -152,16 +103,25 @@ pub fn is_alphanumeric(c: char) -> bool {
         || general_category::No(c)
 }
 
-///
-/// Indicates whether a `char` is a control code point
+/// Returns whether the specified `char` is considered a Unicode alphabetic
+/// code point.
+#[inline]
+pub fn is_alphabetic(c: char) -> bool   { derived_property::Alphabetic(c) }
+
+/// Returns whether the specified `char` is a space or horizontal tab.
+#[inline]
+pub fn is_blank(c: char) -> bool {
+    c == ' ' || c == '\t'
+}
+
+/// Returns whether the specified `char` is a control code point.
 ///
 /// Control code points are defined in terms of the Unicode General Category
 /// 'Cc'.
-///
 #[inline]
 pub fn is_control(c: char) -> bool { general_category::Cc(c) }
 
-/// Indicates whether the `char` is numeric (Nd, Nl, or No)
+/// Returns whether the specified `char` is numeric (Nd, Nl, or No).
 #[inline]
 pub fn is_digit(c: char) -> bool {
     general_category::Nd(c)
@@ -169,8 +129,46 @@ pub fn is_digit(c: char) -> bool {
         || general_category::No(c)
 }
 
+/// Returns whether the specified `char` satisfies the 'XID_Start' Unicode property.
 ///
-/// Checks if a `char` parses as a numeric digit in the given radix
+/// 'XID_Start' is a Unicode Derived Property specified in
+/// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
+/// mostly similar to ID_Start but modified for closure under NFKx.
+#[inline]
+pub fn is_XID_start(c: char) -> bool    { derived_property::XID_Start(c) }
+
+/// Returns whether the specified `char` satisfies the 'XID_Continue' Unicode property.
+///
+/// 'XID_Continue' is a Unicode Derived Property specified in
+/// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
+/// mostly similar to 'ID_Continue' but modified for closure under NFKx.
+#[inline]
+pub fn is_XID_continue(c: char) -> bool { derived_property::XID_Continue(c) }
+
+/// Returns whether the specified `char` is in lower case.
+///
+/// This is defined according to the terms of the Unicode Derived Core Property 'Lowercase'.
+#[inline]
+pub fn is_lowercase(c: char) -> bool { derived_property::Lowercase(c) }
+
+/// Returns whether the specified `char` is in upper case.
+///
+/// This is defined according to the terms of the Unicode Derived Core Property 'Uppercase'.
+#[inline]
+pub fn is_uppercase(c: char) -> bool { derived_property::Uppercase(c) }
+
+/// Returns whether the specified `char` is whitespace.
+///
+/// Whitespace is defined in terms of the Unicode Property 'White_Space'.
+#[inline]
+pub fn is_whitespace(c: char) -> bool {
+    // As an optimization ASCII whitespace characters are checked separately
+    c == ' '
+        || ('\x09' <= c && c <= '\x0d')
+        || property::White_Space(c)
+}
+
+/// Checks if a `char` parses as a numeric digit in the given radix.
 ///
 /// Compared to `is_digit()`, this function only recognizes the
 /// characters `0-9`, `a-z` and `A-Z`.
@@ -187,17 +185,12 @@ pub fn is_digit(c: char) -> bool {
 /// # Note
 ///
 /// This just wraps `to_digit()`.
-///
 #[inline]
 pub fn is_digit_radix(c: char, radix: uint) -> bool {
-    match to_digit(c, radix) {
-        Some(_) => true,
-        None    => false,
-    }
+    to_digit(c, radix).is_some()
 }
 
-///
-/// Converts a `char` to the corresponding digit
+/// Converts a `char` to the corresponding digit.
 ///
 /// # Return value
 ///
@@ -209,7 +202,6 @@ pub fn is_digit_radix(c: char, radix: uint) -> bool {
 /// # Failure
 ///
 /// Fails if given a `radix` outside the range `[0..36]`.
-///
 #[inline]
 pub fn to_digit(c: char, radix: uint) -> Option<uint> {
     if radix > 36 {
@@ -225,40 +217,43 @@ pub fn to_digit(c: char, radix: uint) -> Option<uint> {
     else { None }
 }
 
-/// Convert a char to its uppercase equivalent
+/// Converts a character to its uppercase equivalent.
 ///
-/// The case-folding performed is the common or simple mapping:
-/// it maps one unicode codepoint (one char in Rust) to its uppercase equivalent according
-/// to the Unicode database at ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
-/// The additional SpecialCasing.txt is not considered here, as it expands to multiple
-/// codepoints in some cases.
+/// The case-folding performed is the common or simple mapping: it maps one
+/// unicode codepoint (one character in Rust) to its uppercase equivalent
+/// according to the [Unicode database][1]. The additional `SpecialCasing.txt`
+/// is not considered here, as it expands to multiple codepoints in some cases.
 ///
-/// A full reference can be found here
-/// http://www.unicode.org/versions/Unicode4.0.0/ch03.pdf#G33992
+/// A full reference can be found [here][2].
 ///
 /// # Return value
 ///
-/// Returns the char itself if no conversion was made
+/// Returns the uppercase equivalent of the character, or the character itself
+/// if no conversion was made.
+///
+/// [1]: http://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
+///
+/// [2]: http://www.unicode.org/versions/Unicode4.0.0/ch03.pdf#G33992
 #[inline]
 pub fn to_uppercase(c: char) -> char {
     conversions::to_upper(c)
 }
 
-/// Convert a char to its lowercase equivalent
+/// Converts a character to its lowercase equivalent.
 ///
-/// The case-folding performed is the common or simple mapping
-/// see `to_uppercase` for references and more information
+/// The case-folding performed is the common or simple mapping. See
+/// `to_uppercase()` for references and more information.
 ///
 /// # Return value
 ///
-/// Returns the char itself if no conversion if possible
+/// Returns the lowercase equivalent of the character, or the character itself
+/// if no conversion is possible.
 #[inline]
 pub fn to_lowercase(c: char) -> char {
     conversions::to_lower(c)
 }
 
-///
-/// Converts a number to the character representing it
+/// Converts a number to the character representing it.
 ///
 /// # Return value
 ///
@@ -268,7 +263,6 @@ pub fn to_lowercase(c: char) -> char {
 /// # Failure
 ///
 /// Fails if given an `radix` > 36.
-///
 #[inline]
 pub fn from_digit(num: uint, radix: uint) -> Option<char> {
     if radix > 36 {
@@ -287,15 +281,13 @@ pub fn from_digit(num: uint, radix: uint) -> Option<char> {
     }
 }
 
-///
-/// Returns the hexadecimal Unicode escape of a `char`
+/// Returns the hexadecimal Unicode escape of the specified `char`.
 ///
 /// The rules are as follows:
 ///
 /// - chars in [0,0xff] get 2-digit escapes: `\\xNN`
 /// - chars in [0x100,0xffff] get 4-digit escapes: `\\uNNNN`
 /// - chars above 0x10000 get 8-digit escapes: `\\UNNNNNNNN`
-///
 pub fn escape_unicode(c: char, f: |char|) {
     // avoid calling str::to_str_radix because we don't really need to allocate
     // here.
@@ -315,18 +307,17 @@ pub fn escape_unicode(c: char, f: |char|) {
     }
 }
 
+/// Returns a 'default' ASCII and C++11-like literal escape of the specified
+/// `char`.
 ///
-/// Returns a 'default' ASCII and C++11-like literal escape of a `char`
-///
-/// The default is chosen with a bias toward producing literals that are
-/// legal in a variety of languages, including C++11 and similar C-family
-/// languages. The exact rules are:
+/// The default is chosen with a bias toward producing literals that are legal
+/// in a variety of languages, including C++11 and similar C-family languages.
+/// The exact rules are:
 ///
 /// - Tab, CR and LF are escaped as '\t', '\r' and '\n' respectively.
 /// - Single-quote, double-quote and backslash chars are backslash-escaped.
 /// - Any other chars in the range [0x20,0x7e] are not escaped.
 /// - Any other chars are given hex unicode escapes; see `escape_unicode`.
-///
 pub fn escape_default(c: char, f: |char|) {
     match c {
         '\t' => { f('\\'); f('t'); }
@@ -340,7 +331,8 @@ pub fn escape_default(c: char, f: |char|) {
     }
 }
 
-/// Returns the amount of bytes this `char` would need if encoded in UTF-8
+/// Returns the amount of bytes the specified `char` would need if encoded in
+/// UTF-8.
 pub fn len_utf8_bytes(c: char) -> uint {
     let code = c as u32;
     match () {
@@ -354,74 +346,6 @@ pub fn len_utf8_bytes(c: char) -> uint {
 
 /// Useful functions for Unicode characters.
 pub trait Char {
-    /// Returns whether the specified character is considered a Unicode
-    /// alphabetic code point.
-    fn is_alphabetic(&self) -> bool;
-
-    /// Returns whether the specified character satisfies the 'XID_Start'
-    /// Unicode property.
-    ///
-    /// 'XID_Start' is a Unicode Derived Property specified in
-    /// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
-    /// mostly similar to ID_Start but modified for closure under NFKx.
-    fn is_XID_start(&self) -> bool;
-
-    /// Returns whether the specified `char` satisfies the 'XID_Continue'
-    /// Unicode property.
-    ///
-    /// 'XID_Continue' is a Unicode Derived Property specified in
-    /// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
-    /// mostly similar to 'ID_Continue' but modified for closure under NFKx.
-    fn is_XID_continue(&self) -> bool;
-
-
-    /// Indicates whether a character is in lowercase.
-    ///
-    /// This is defined according to the terms of the Unicode Derived Core
-    /// Property `Lowercase`.
-    fn is_lowercase(&self) -> bool;
-
-    /// Indicates whether a character is in uppercase.
-    ///
-    /// This is defined according to the terms of the Unicode Derived Core
-    /// Property `Uppercase`.
-    fn is_uppercase(&self) -> bool;
-
-    /// Indicates whether a character is whitespace.
-    ///
-    /// Whitespace is defined in terms of the Unicode Property `White_Space`.
-    fn is_whitespace(&self) -> bool;
-
-    /// Indicates whether a character is alphanumeric.
-    ///
-    /// Alphanumericness is defined in terms of the Unicode General Categories
-    /// 'Nd', 'Nl', 'No' and the Derived Core Property 'Alphabetic'.
-    fn is_alphanumeric(&self) -> bool;
-
-    /// Indicates whether a character is a control code point.
-    ///
-    /// Control code points are defined in terms of the Unicode General
-    /// Category `Cc`.
-    fn is_control(&self) -> bool;
-
-    /// Indicates whether the character is numeric (Nd, Nl, or No).
-    fn is_digit(&self) -> bool;
-
-    /// Checks if a `char` parses as a numeric digit in the given radix.
-    ///
-    /// Compared to `is_digit()`, this function only recognizes the characters
-    /// `0-9`, `a-z` and `A-Z`.
-    ///
-    /// # Return value
-    ///
-    /// Returns `true` if `c` is a valid digit under `radix`, and `false`
-    /// otherwise.
-    ///
-    /// # Failure
-    ///
-    /// Fails if given a radix > 36.
-    fn is_digit_radix(&self, radix: uint) -> bool;
-
     /// Converts a character to the corresponding digit.
     ///
     /// # Return value
@@ -434,37 +358,6 @@ pub trait Char {
     ///
     /// Fails if given a radix outside the range [0..36].
     fn to_digit(&self, radix: uint) -> Option<uint>;
-
-    /// Converts a character to its lowercase equivalent.
-    ///
-    /// The case-folding performed is the common or simple mapping. See
-    /// `to_uppercase()` for references and more information.
-    ///
-    /// # Return value
-    ///
-    /// Returns the lowercase equivalent of the character, or the character
-    /// itself if no conversion is possible.
-    fn to_lowercase(&self) -> char;
-
-    /// Converts a character to its uppercase equivalent.
-    ///
-    /// The case-folding performed is the common or simple mapping: it maps
-    /// one unicode codepoint (one character in Rust) to its uppercase
-    /// equivalent according to the Unicode database [1]. The additional
-    /// `SpecialCasing.txt` is not considered here, as it expands to multiple
-    /// codepoints in some cases.
-    ///
-    /// A full reference can be found here [2].
-    ///
-    /// # Return value
-    ///
-    /// Returns the uppercase equivalent of the character, or the character
-    /// itself if no conversion was made.
-    ///
-    /// [1]: ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
-    ///
-    /// [2]: http://www.unicode.org/versions/Unicode4.0.0/ch03.pdf#G33992
-    fn to_uppercase(&self) -> char;
 
     /// Converts a number to the character representing it.
     ///
@@ -520,6 +413,107 @@ pub trait Char {
     ///
     /// This will then return the number of `u16`s written to the slice.
     fn encode_utf16(&self, dst: &mut [u16]) -> uint;
+}
+
+/// Trait for classification of unicode characters.
+pub trait Classify {
+    /// Indicates whether a character is alphanumeric.
+    ///
+    /// Alphanumericness is defined in terms of the Unicode General Categories
+    /// 'Nd', 'Nl', 'No' and the Derived Core Property 'Alphabetic'.
+    fn is_alphanumeric(&self) -> bool;
+
+    /// Returns whether the specified character is considered a Unicode
+    /// alphabetic code point.
+    fn is_alphabetic(&self) -> bool;
+
+    /// Returns whether the specified character satisfies the 'XID_Start'
+    /// Unicode property.
+    ///
+    /// 'XID_Start' is a Unicode Derived Property specified in
+    /// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
+    /// mostly similar to ID_Start but modified for closure under NFKx.
+    fn is_XID_start(&self) -> bool;
+
+    /// Returns whether the specified `char` satisfies the 'XID_Continue'
+    /// Unicode property.
+    ///
+    /// 'XID_Continue' is a Unicode Derived Property specified in
+    /// [UAX #31](http://unicode.org/reports/tr31/#NFKC_Modifications),
+    /// mostly similar to 'ID_Continue' but modified for closure under NFKx.
+    fn is_XID_continue(&self) -> bool;
+
+    /// Indicates whether a character is in lowercase.
+    ///
+    /// This is defined according to the terms of the Unicode Derived Core
+    /// Property `Lowercase`.
+    fn is_lowercase(&self) -> bool;
+
+    /// Indicates whether a character is in uppercase.
+    ///
+    /// This is defined according to the terms of the Unicode Derived Core
+    /// Property `Uppercase`.
+    fn is_uppercase(&self) -> bool;
+
+    /// Indicates whether a character is whitespace.
+    ///
+    /// Whitespace is defined in terms of the Unicode Property `White_Space`.
+    fn is_whitespace(&self) -> bool;
+
+    /// Indicates whether a character is a control code point.
+    ///
+    /// Control code points are defined in terms of the Unicode General
+    /// Category `Cc`.
+    fn is_control(&self) -> bool;
+
+    /// Indicates whether the character is numeric (Nd, Nl, or No).
+    fn is_digit(&self) -> bool;
+
+    /// Checks if a `char` parses as a numeric digit in the given radix.
+    ///
+    /// Compared to `is_digit()`, this function only recognizes the characters
+    /// `0-9`, `a-z` and `A-Z`.
+    ///
+    /// # Return value
+    ///
+    /// Returns `true` if `c` is a valid digit under `radix`, and `false`
+    /// otherwise.
+    ///
+    /// # Failure
+    ///
+    /// Fails if given a radix > 36.
+    fn is_digit_radix(&self, radix: uint) -> bool;
+
+    /// Converts a character to its lowercase equivalent.
+    ///
+    /// The case-folding performed is the common or simple mapping. See
+    /// `to_uppercase()` for references and more information.
+    ///
+    /// # Return value
+    ///
+    /// Returns the lowercase equivalent of the character, or the character
+    /// itself if no conversion is possible.
+    fn to_lowercase(&self) -> char;
+
+    /// Converts a character to its uppercase equivalent.
+    ///
+    /// The case-folding performed is the common or simple mapping: it maps one
+    /// unicode codepoint (one character in Rust) to its uppercase equivalent
+    /// according to the [Unicode database][1]. The additional
+    /// `SpecialCasing.txt` is not considered here, as it expands to multiple
+    /// codepoints in some cases.
+    ///
+    /// A full reference can be found [here][2].
+    ///
+    /// # Return value
+    ///
+    /// Returns the uppercase equivalent of the character, or the character
+    /// itself if no conversion was made.
+    ///
+    /// [1]: http://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
+    ///
+    /// [2]: http://www.unicode.org/versions/Unicode4.0.0/ch03.pdf#G33992
+    fn to_uppercase(&self) -> char;
 }
 
 impl Char for char {
